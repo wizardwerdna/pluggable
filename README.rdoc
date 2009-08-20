@@ -1,6 +1,52 @@
 = pluggable
 
-Description goes here.
+Pluggable is a mixin for classes requiring plugins.  A pluggable class, +Klass+, has a public function, +plugins+, returning an array-like object that holds all subclasses of <tt>Klass::Plugin</tt>.
+
+	require 'pluggable'
+	class Test
+		include Pluggable
+		def process param
+			plugins.each {|plugin| plugin.process param}
+		end
+	end
+
+	class Plugin1 < Test:Plugin
+		def process param; ...; end
+	end
+
+	class Plugin2 < Test:Plugin
+		def process param; ...; end
+	end
+
+It may be convenient to have public methods of plugins delegated to from the +plugins+ object, which may in turn be delgated to by the +Pluggable+ class in various ways.  For example:
+
+	require 'pluggable'
+	class Test
+		include Pluggable
+		def process param
+			plugins.each {|plugin| plugin.process param}
+		end
+		def missing_method symbol, *args
+			plugins.send(symbol, *args)
+		end
+	end
+
+	class Plugin1 < Test:Plugin
+		def foo; "foo"; end
+		def process param; subprocess; end
+		private
+		def subprocess; ...; end
+	end
+
+	class Plugin2 < Test:Plugin
+		def bar; "bar"; end
+		def process param; subprocess; end
+		private
+		def subprocess; ...; end
+	end
+
+	Test.new.plugins.delegate_public_methods_to_plugins_except :process
+	Test.new.foo # => "foo"
 
 == Note on Patches/Pull Requests
  
@@ -9,8 +55,7 @@ Description goes here.
 * Add tests for it. This is important so I don't break it in a
   future version unintentionally.
 * Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but
-   bump version in a commit by itself I can ignore when I pull)
+  (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request. Bonus points for topic branches.
 
 == Copyright
