@@ -1,6 +1,11 @@
 = pluggable
 
-Pluggable is a mixin for classes requiring plugins.  A pluggable class, +Klass+, has a public function, +plugins+, returning an array-like object that holds all subclasses of <tt>Klass::Plugin</tt>.
+Pluggable is a mixin for classes requiring plugins.  Including *Pluggable* adds several methods:
+
+[*install_plugins*] Should generally be called when initializing an instance of the Pluggable class.
+[*plugins*] After initialization, returns a list of plugin instances
+
+For example:
 
 	require 'rubygems'
 	require 'pluggable'
@@ -20,8 +25,7 @@ Pluggable is a mixin for classes requiring plugins.  A pluggable class, +Klass+,
 	
 	Test.new.process # => ["foo", "bar"]	
 
-It may be convenient to have public methods of plugins delegated to from the +plugins+ object, which may in turn be delgated to by the +Pluggable+ class in various ways.  For example:
-
+It may be convenient to have public methods of plugins delegated to from the +plugins+ object, which may in turn be delgated to by the +Pluggable+ class in various ways.  This is accomplished with the class method *delegate_plugin_public_methods_except*, which should be called after loading all of the plugins. For example:
 
 	require 'rubygems'
 	require 'pluggable'
@@ -42,11 +46,45 @@ It may be convenient to have public methods of plugins delegated to from the +pl
 	end
 
 	Test.delegate_plugin_public_methods_except :process
-
 	
 	Test.new.process # => ["foo", "bar"]
-	Test.new.plugins.foo = "foo"
-	Test.new.plugins.bar = "bar"
+	Test.new.plugins.foo # => "foo"
+	Test.new.plugins.bar # => "bar"
+	
+Finally, it may be useful to establish an API for plugins in the form of a traditional Ruby module.  The module may be included into the plugins using the class method *plugin_install_methods, which may be called in the Pluggable class definition.  For example:
+
+	require 'rubygems'
+	require 'pluggable'
+	module PluginAPI
+	  def first; "first"; end
+	  def second; private_second; end
+	  module ClassMethods
+	    def class_first; "class_first"; end
+	  end
+	  private
+	  def private_second; "second"; end
+	  def self.included(klass)
+	    klass.extend ClassMethods
+	  end
+	end
+
+	class Test
+		include Pluggable
+		def initialize; install_plugins; end
+		def process; plugins.map {|plugin| plugin.process}; end
+		private
+		def method_missing symbol, *args
+		  plugins.send(symbol, *args)
+		end
+	end
+	
+	require 'plugin_definitions'
+
+	Test.new.plugins.first.first # => "first"
+	Test.new.plugins.first.second # => "second"
+	Test.new.plugins.first.class.class_first # => "class_first"
+	
+And of course, the plugins may override the API definitions.
 
 == Note on Patches/Pull Requests
  

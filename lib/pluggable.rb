@@ -65,5 +65,8 @@ module Pluggable
     def delegate_plugin_public_methods_except *excluded_methods
       PluginFactory.instance.delegate_plugin_public_methods_to_plugins_class_except *excluded_methods
     end
+    def plugin_include_module mod
+      Plugin.class_eval "include #{mod.to_s}"
+    end
   end
 end

@@ -1,8 +1,22 @@
 require 'forwardable'
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
+module PluginAPI
+  def first; "first"; end
+  def second; private_second; end
+  module ClassMethods
+    def class_first; "class_first"; end
+  end
+  private
+  def private_second; "second"; end
+  def self.included(klass)
+    klass.extend ClassMethods
+  end
+end
+
 class Test
   include Pluggable
+  plugin_include_module PluginAPI
   def process
     plugins.map{|each| each.process}
   end
@@ -49,7 +63,15 @@ describe Pluggable, "when included in a class" do
     Test.plugin_factory.should have(3).items
     Test.plugin_factory.should include(Plugin1, Plugin2, Plugin3)
   end
+    
+  it "should install a class method #delegate_plugin_public_methods_except" do
+    Test.should respond_to(:delegate_plugin_public_methods_except)
+  end
   
+  it "should install a class method #plugin_include_module" do
+    Test.should respond_to(:plugin_include_module)
+  end
+
   it "should add a method #plugins that should be nil upon creation" do
     @test_instance.should respond_to(:plugins)
     @test_instance.plugins.should be_nil
@@ -57,10 +79,6 @@ describe Pluggable, "when included in a class" do
   
   it "should add a method #install_plugins" do
     Test.new.should respond_to(:install_plugins)
-  end
-  
-  it "should install a class method #delegate_plugin_public_methods_except" do
-    Test.should respond_to(:delegate_plugin_public_methods_except)
   end
 end
 
@@ -113,6 +131,16 @@ describe Pluggable, "after Test has delegated all but excepted plugin public met
   end
 end
 
+describe Test::Plugin, "after Test has included a module" do
+  it "should have the instance methods of the module" do
+    Test::Plugin.instance_methods.should include(*PluginAPI.instance_methods)
+  end
+  
+  it "should have the class methods of the module" do
+    Test::Plugin.methods.should include(*PluginAPI::ClassMethods.instance_methods)
+  end
+end
+
 describe Test::PluginFactory, "instances" do
   before(:each) do
     @instance = Test::PluginFactory.instance
@@ -132,7 +160,6 @@ describe Test::PluginFactory, "instances" do
 end
 
 describe Test, "when using message_missing to simulate delegation from the parent" do
-  
   before(:each) do
     @test_instance = Test.new
     @test_instance.install_plugins
@@ -146,5 +173,11 @@ describe Test, "when using message_missing to simulate delegation from the paren
     @test_instance.foo.should == "foo"
     @test_instance.bar.should == "bar"
     @test_instance.baz.should == "baz"
+  end
+  
+  it "should work with included module procedures" do
+    @test_instance.plugins.first.first.should == "first"
+    @test_instance.plugins.first.second.should == "second"
+    @test_instance.plugins.first.class.class_first.should == "class_first"
   end
 end
