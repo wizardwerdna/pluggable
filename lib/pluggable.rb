@@ -19,24 +19,27 @@ module Pluggable
   
   class PluginFactory < Array
     include Singleton
-    def build_plugins
+    def build_plugins(*args)
       array_of_instance_and_name_pairs = map do |each| 
-        instance = each.new
+        instance = each.new(*args)
         {:name => variable_name_for_plugin_instance(instance), :instance => instance}
       end
       Plugins.from_array_of_instance_and_name_pairs(array_of_instance_and_name_pairs)
     end
     def delegate_plugin_public_methods_to_plugins_class_except *excluded_methods
       excluded_methods = excluded_methods.map{|each| each.to_s}
-      build_plugins.each do |instance|
-        delegated_methods = instance.public_methods-Plugin.public_instance_methods-excluded_methods
-        variable_name = variable_name_for_plugin_instance instance
+      each do |klass|
+        delegated_methods = klass.public_instance_methods-Plugin.public_instance_methods-excluded_methods
+        variable_name = variable_name_for_plugin_class klass
         Plugins.def_delegators variable_name, *delegated_methods
       end
     end
     private
     def variable_name_for_plugin_instance instance
-      "@ivar_for_#{instance.class.to_s}".gsub(/::/) {'_colons_'}.to_sym
+      variable_name_for_plugin_class instance.class
+    end
+    def variable_name_for_plugin_class klass
+      "@ivar_for_#{klass.to_s}".gsub(/::/) {'_colons_'}.to_sym
     end
   end
   
@@ -46,8 +49,8 @@ module Pluggable
   	end
   end
   
-  def install_plugins
-    instance_variable_set :@pluggable_module_plugins, PluginFactory.instance.build_plugins
+  def install_plugins(*args)
+    instance_variable_set :@pluggable_module_plugins, PluginFactory.instance.build_plugins(*args)
   end
 
   def plugins

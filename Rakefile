@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "pluggable"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{Pluggable is a mixin for classes requiring plugins.}
+    gem.description = %Q{Pluggable classes are automatically registered from classes that subclass from <classname>::Plugin, and can use tools for managing, installing and delegating methods therefrom.}
     gem.email = "wizardwerdna@gmail.com"
     gem.homepage = "http://github.com/wizardwerdna/pluggable"
     gem.authors = ["Andrew C. Greenberg"]

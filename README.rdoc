@@ -56,6 +56,7 @@ Finally, it may be useful to establish an API for plugins in the form of a tradi
 	require 'rubygems'
 	require 'pluggable'
 	module PluginAPI
+	  def initialize(one, two, three); end
 	  def first; "first"; end
 	  def second; private_second; end
 	  module ClassMethods
@@ -70,7 +71,7 @@ Finally, it may be useful to establish an API for plugins in the form of a tradi
 
 	class Test
 		include Pluggable
-		def initialize; install_plugins; end
+		def initialize; install_plugins(:one, :two, :three); end # arity must match initialize methods for all plugins
 		def process; plugins.map {|plugin| plugin.process}; end
 		private
 		def method_missing symbol, *args

@@ -2,6 +2,7 @@ require 'forwardable'
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
 module PluginAPI
+  def initialize(one, two, three); end
   def first; "first"; end
   def second; private_second; end
   module ClassMethods
@@ -48,7 +49,7 @@ class Plugin3 < Test::Plugin
 end
 
 if Test.respond_to? :delegate_plugin_public_methods_except
-  Test.delegate_plugin_public_methods_except :exception_public
+  Test.delegate_plugin_public_methods_except :exception_public, :one, :two, :three, :initialize
 end
 
 
@@ -80,12 +81,17 @@ describe Pluggable, "when included in a class" do
   it "should add a method #install_plugins" do
     Test.new.should respond_to(:install_plugins)
   end
+  
+  it "should properly instantiate plugins upon a call to #install_plugins" do
+    [Plugin1, Plugin2, Plugin3].each{|each| each.should_receive(:new).with(:one, :two, :three)}
+    Test.new.install_plugins(:one, :two, :three)
+  end
 end
 
 describe Pluggable, "after installing plugins" do
   before(:each) do
     @test_instance = Test.new
-    @test_instance.install_plugins
+    @test_instance.install_plugins(:one, :two, :three)
   end
   
   it "should have #plugins answer an object containing a collection of new plugin instances after #install_plugins" do
@@ -108,7 +114,7 @@ end
 describe Pluggable, "after Test has delegated all but excepted plugin public methods" do
   before(:each) do
     @test_instance = Test.new
-    @test_instance.install_plugins
+    @test_instance.install_plugins(:one, :two, :three)
   end
 
   it "should delegate public methods of plugins" do
@@ -152,7 +158,7 @@ describe Test::PluginFactory, "instances" do
   end
   
   it "should build a Plugins object with fresh instances of each plugin" do
-    @installed_plugins = @instance.build_plugins
+    @installed_plugins = @instance.build_plugins(:one, :two, :three)
     @installed_plugins.should be_a_kind_of(Test::Plugins)
     @installed_plugins.should have(3).items
     @installed_plugins.map{|each| each.class}.should include(Plugin1, Plugin2, Plugin3)
@@ -162,7 +168,7 @@ end
 describe Test, "when using message_missing to simulate delegation from the parent" do
   before(:each) do
     @test_instance = Test.new
-    @test_instance.install_plugins
+    @test_instance.install_plugins(:one, :two, :three)
   end
 
   it "should properly process using all the plugins" do
