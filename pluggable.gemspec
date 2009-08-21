@@ -5,12 +5,12 @@
 
 Gem::Specification.new do |s|
   s.name = %q{pluggable}
-  s.version = "0.2.0"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew C. Greenberg"]
-  s.date = %q{2009-08-20}
-  s.description = %q{TODO: longer description of your gem}
+  s.date = %q{2009-08-21}
+  s.description = %q{Pluggable classes are automatically registered from classes that subclass from <classname>::Plugin, and can use tools for managing, installing and delegating methods therefrom.}
   s.email = %q{wizardwerdna@gmail.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
-  s.summary = %q{TODO: one-line summary of your gem}
+  s.summary = %q{Pluggable is a mixin for classes requiring plugins.}
   s.test_files = [
     "spec/pluggable_spec.rb",
      "spec/spec_helper.rb"
