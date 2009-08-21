@@ -2,51 +2,51 @@
 
 Pluggable is a mixin for classes requiring plugins.  A pluggable class, +Klass+, has a public function, +plugins+, returning an array-like object that holds all subclasses of <tt>Klass::Plugin</tt>.
 
+	require 'rubygems'
 	require 'pluggable'
 	class Test
 		include Pluggable
-		def process param
-			plugins.each {|plugin| plugin.process param}
-		end
+		def initialize; install_plugins; end
+		def process; plugins.map {|plugin| plugin.process}; end
 	end
 
-	class Plugin1 < Test:Plugin
-		def process param; ...; end
+	class Plugin1 < Test::Plugin
+		def process; "foo"; end
 	end
 
-	class Plugin2 < Test:Plugin
-		def process param; ...; end
+	class Plugin2 < Test::Plugin
+		def process; "bar"; end
 	end
+	
+	Test.new.process # => ["foo", "bar"]	
 
 It may be convenient to have public methods of plugins delegated to from the +plugins+ object, which may in turn be delgated to by the +Pluggable+ class in various ways.  For example:
 
+
+	require 'rubygems'
 	require 'pluggable'
 	class Test
 		include Pluggable
-		def process param
-			plugins.each {|plugin| plugin.process param}
-		end
-		def missing_method symbol, *args
-			plugins.send(symbol, *args)
-		end
+		def initialize; install_plugins; end
+		def process; plugins.map {|plugin| plugin.process}; end
 	end
 
-	class Plugin1 < Test:Plugin
+	class Plugin1 < Test::Plugin
 		def foo; "foo"; end
-		def process param; subprocess; end
-		private
-		def subprocess; ...; end
+		def process; foo; end
 	end
 
-	class Plugin2 < Test:Plugin
+	class Plugin2 < Test::Plugin
 		def bar; "bar"; end
-		def process param; subprocess; end
-		private
-		def subprocess; ...; end
+		def process; bar; end
 	end
 
-	Test.new.plugins.delegate_public_methods_to_plugins_except :process
-	Test.new.foo # => "foo"
+	Test.delegate_plugin_public_methods_except :process
+
+	
+	Test.new.process # => ["foo", "bar"]
+	Test.new.plugins.foo = "foo"
+	Test.new.plugins.bar = "bar"
 
 == Note on Patches/Pull Requests
  
